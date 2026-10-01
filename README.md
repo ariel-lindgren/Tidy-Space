@@ -61,17 +61,18 @@ TidySpace.exe --engine=node          # installed app
 
 An invalid value is reported on the console and the app uses `auto`.
 
-| Script                                | What it does                                                              |
-| ------------------------------------- | ------------------------------------------------------------------------- |
-| `npm run dev` / `npm run preview`     | Development with HMR / runs the production build                          |
-| `npm run build`                       | Builds main, engine, preload and renderer into `out/`                     |
-| `npm run build:native`                | Builds the Rust addon (release)                                           |
-| `npm run check`                       | Lint + typecheck + unit tests                                             |
-| `npm run test:coverage`               | Unit tests with coverage (Vitest)                                         |
-| `npm run test:e2e`                    | E2E tests on the real app (Playwright + Electron) — needs `npm run build` |
-| `npm run test:native` / `lint:native` | `cargo test` / `rustfmt` + `clippy -D warnings`                           |
-| `npm run screenshots`                 | Regenerates the README screenshots (Windows)                              |
-| `npm run package`                     | Builds the installer for the current OS into `release/`                   |
+| Script                                | What it does                                                               |
+| ------------------------------------- | -------------------------------------------------------------------------- |
+| `npm run dev` / `npm run preview`     | Development with HMR / runs the production build                           |
+| `npm run build`                       | Builds main, engine, preload and renderer into `out/`                      |
+| `npm run build:native`                | Builds the Rust addon (release)                                            |
+| `npm run check`                       | Lint + typecheck + unit tests                                              |
+| `npm run test:coverage`               | Unit tests with coverage (Vitest)                                          |
+| `npm run test:e2e`                    | E2E tests on the real app (Playwright + Electron) — needs `npm run build`  |
+| `npm run test:native` / `lint:native` | `cargo test` / `rustfmt` + `clippy -D warnings`                            |
+| `npm run screenshots`                 | Regenerates the README screenshots (Windows)                               |
+| `npm run icons`                       | Regenerates the app icons (`build/`, `resources/`) from the title bar mark |
+| `npm run package`                     | Builds the installer for the current OS into `release/`                    |
 
 ## Architecture
 

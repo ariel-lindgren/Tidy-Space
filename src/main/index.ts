@@ -12,6 +12,7 @@ import { configureEngine, registerIpc } from './ipc';
 import { createFileLogger } from './logger';
 import { createSettingsStore } from './stores';
 import { createMainWindow } from './window';
+import appIcon from '../../resources/icon.png?asset';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const rendererUrl = process.env.ELECTRON_RENDERER_URL;
@@ -29,6 +30,10 @@ if (!engineChoice)
   console.error(`[tidyspace] --engine=${engineArg} inválido (use ${ENGINE_CHOICES.join(', ')}); usando auto`);
 
 if (!app.requestSingleInstanceLock()) app.quit();
+
+// Windows: o mesmo id do instalador (appId do electron-builder) agrupa a janela com o atalho fixado
+// na barra de tarefas e usa o ícone dele. Em desenvolvimento fica o padrão do Electron.
+if (process.platform === 'win32' && app.isPackaged) app.setAppUserModelId('br.com.wkm.tidyspace');
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -74,6 +79,8 @@ function applyContentSecurityPolicy(): void {
 }
 
 async function bootstrap(): Promise<void> {
+  // macOS em desenvolvimento: o Dock mostraria o ícone do Electron (empacotado, vem do .icns).
+  if (process.platform === 'darwin' && !app.isPackaged) app.dock?.setIcon(appIcon);
   const userData = app.getPath('userData');
   const settings = createSettingsStore(path.join(userData, 'settings.json'), process.platform);
   const systemLanguages = app.getPreferredSystemLanguages();
@@ -126,6 +133,7 @@ async function bootstrap(): Promise<void> {
       preload: path.join(here, '../preload/index.cjs'),
       rendererUrl,
       rendererFile: path.join(here, '../renderer/index.html'),
+      icon: appIcon,
     });
     mainWindow.on('closed', () => (mainWindow = null));
   };

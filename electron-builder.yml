@@ -3,11 +3,17 @@
 appId: br.com.wkm.tidyspace
 productName: TidySpace
 copyright: Copyright © 2026 Working Minds
+# Ícones em build/ (gerados por `npm run icons` a partir da marca da barra de título).
 directories:
   output: release/${version}
+  buildResources: build
 files:
   - out/**
+  - resources/**
   - package.json
+# Ícone da janela (resources/icon.png) fora do asar, lido pelo sistema em tempo de execução.
+asarUnpack:
+  - resources/**
 # O módulo nativo fica fora do asar (arquivos .node precisam existir no disco).
 extraResources:
   - from: src/native/node/dist
@@ -16,12 +22,14 @@ extraResources:
 npmRebuild: false
 win:
   target: [nsis]
+  icon: build/icon.ico
   artifactName: ${productName}-${version}-win-${arch}.${ext}
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
 mac:
   target: [dmg]
+  icon: build/icon.icns
   category: public.app-category.utilities
   artifactName: ${productName}-${version}-mac-${arch}.${ext}
   hardenedRuntime: true
@@ -32,6 +40,7 @@ mac:
   identity: null
 linux:
   target: [AppImage, deb]
+  icon: build/icons
   category: Utility
   maintainer: Working Minds <ariel@wkm.com.br>
   artifactName: ${productName}-${version}-linux-${arch}.${ext}

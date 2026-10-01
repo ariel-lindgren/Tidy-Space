@@ -6,6 +6,8 @@ export interface WindowOptions {
   preload: string;
   rendererUrl?: string;
   rendererFile: string;
+  /** Ícone da janela: barra de tarefas no Windows e no Linux (no macOS vem do bundle/Dock). */
+  icon: string;
 }
 
 /**
@@ -22,6 +24,7 @@ export function createMainWindow(opts: WindowOptions): BrowserWindow {
     show: false,
     backgroundColor: '#05070c',
     title: 'TidySpace',
+    ...(isMac ? {} : { icon: opts.icon }),
     ...(isMac ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 14, y: 13 } } : { frame: false }),
     webPreferences: {
       preload: opts.preload,

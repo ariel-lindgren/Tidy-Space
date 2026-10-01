@@ -62,6 +62,7 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "screenshots": "electron-vite build && node scripts/screenshots.mjs",
+    "icons": "node scripts/electron-env.mjs electron scripts/make-icons.mjs",
     "test:native": "cargo test --manifest-path src/native/Cargo.toml",
     "lint:native": "cargo fmt --manifest-path src/native/Cargo.toml --all --check && cargo clippy --manifest-path src/native/Cargo.toml --all-targets -- -D warnings",
     "check": "npm run lint && npm run typecheck && npm run test",
