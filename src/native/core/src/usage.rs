@@ -21,8 +21,11 @@ pub struct Usage {
 }
 
 /// Tamanho de cluster assumido quando o sistema não informa a alocação (padrão do NTFS).
+/// Só o Windows precisa: no Unix a alocação vem de `st_blocks`.
+#[cfg(any(windows, test))]
 const CLUSTER: u64 = 4096;
 
+#[cfg(any(windows, test))]
 pub(crate) fn round_up(bytes: u64, unit: u64) -> u64 {
     bytes.div_ceil(unit).saturating_mul(unit)
 }
