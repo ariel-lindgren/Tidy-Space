@@ -42,5 +42,5 @@ linux:
   target: [AppImage, deb]
   icon: build/icons
   category: Utility
-  maintainer: Working Minds <ariel@wkm.com.br>
+  maintainer: Working Minds <tidyspace@wkm.com.br>
   artifactName: ${productName}-${version}-linux-${arch}.${ext}

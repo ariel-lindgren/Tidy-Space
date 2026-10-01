@@ -3,7 +3,7 @@
   "productName": "TidySpace",
   "version": "0.1.0",
   "description": "Descubra o que está ocupando espaço em disco — por disco inteiro ou por pasta.",
-  "author": "Working Minds <ariel@wkm.com.br>",
+  "author": "Working Minds <tidyspace@wkm.com.br>",
   "license": "MIT",
   "private": true,
   "type": "module",
