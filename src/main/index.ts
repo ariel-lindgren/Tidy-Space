@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -100,11 +101,14 @@ async function bootstrap(): Promise<void> {
   log(`TidySpace ${app.getVersion()} iniciado (${process.platform} ${process.arch})`);
   // Só em testes E2E: simula uma Lixeira lenta (pastas com muitos arquivos).
   const trashDelay = Number(process.env.TIDYSPACE_TEST_TRASH_DELAY_MS ?? 0);
+  const trashHold = process.env.TIDYSPACE_TEST_TRASH_HOLD;
   const files = new FileActions({
     engine,
     log,
     trashItem: async p => {
       if (trashDelay > 0) await new Promise(r => setTimeout(r, trashDelay));
+      // Só em testes E2E: enquanto o arquivo existir, a Lixeira "não termina" (o teste decide quando).
+      while (trashHold && existsSync(trashHold)) await new Promise(r => setTimeout(r, 100));
       await shell.trashItem(p);
     },
     removePermanently: p => rm(p, { recursive: true, force: false }),

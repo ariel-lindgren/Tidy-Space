@@ -28,6 +28,12 @@ let page: Page;
 let fixture: string;
 let other: string;
 let userData: string;
+/** Enquanto este arquivo existir, a varredura não termina (ver DelayedScanner). */
+let holdScan: string;
+const holdScanOpen = () => writeFileSync(holdScan, '');
+const releaseScan = () => rmSync(holdScan, { force: true });
+/** Idem para a Lixeira (ver TIDYSPACE_TEST_TRASH_HOLD no main). */
+let holdTrash: string;
 
 const write = (root: string, rel: string, bytes: number) => {
   const full = path.join(root, rel);
@@ -40,8 +46,8 @@ async function launch(): Promise<void> {
     args: ['.'],
     env: electronEnv({
       TIDYSPACE_USER_DATA: userData,
-      TIDYSPACE_TEST_SCAN_DELAY_MS: '1500',
-      TIDYSPACE_TEST_TRASH_DELAY_MS: '2500',
+      TIDYSPACE_TEST_SCAN_HOLD: holdScan,
+      TIDYSPACE_TEST_TRASH_HOLD: holdTrash,
     }),
   });
   page = await app.firstWindow();
@@ -85,6 +91,8 @@ test.beforeAll(async () => {
   other = mkdtempSync(path.join(os.tmpdir(), 'tidyspace-e2e-b-'));
   userData = mkdtempSync(path.join(os.tmpdir(), 'tidyspace-data-'));
   seedSettings(userData, { language: 'pt-BR' });
+  holdScan = path.join(userData, 'hold-scan');
+  holdTrash = path.join(userData, 'hold-trash');
   write(fixture, 'videos/filme.mp4', 3_000_000);
   write(fixture, 'videos/trailer.mkv', 1_200_000);
   write(fixture, 'downloads/instalador.exe', 900_000);
@@ -147,6 +155,7 @@ test('mostra a tela inicial com os volumes', async () => {
 });
 
 test('permite sair da tela de análise e voltar enquanto ela roda', async () => {
+  holdScanOpen();
   await scanFolder(fixture);
   await expect(page.locator('.scan .target')).toHaveText(fixture);
   await page.getByRole('button', { name: 'Ajustes' }).first().click();
@@ -158,14 +167,18 @@ test('permite sair da tela de análise e voltar enquanto ela roda', async () => 
   await shot('02-background-scan');
   await page.locator('.status-scan').click();
   await expect(page.locator('.scan .target')).toHaveText(fixture);
+  releaseScan();
   // Ao terminar, a própria tela leva ao Explorar.
   await expect(page.locator('.crumbs')).toBeVisible({ timeout: 20_000 });
   await expect(scanNav).toHaveCount(0);
 });
 
 test('avisa quando a análise termina fora da tela de progresso', async () => {
+  holdScanOpen();
   await scanFolder(fixture);
   await page.getByRole('button', { name: 'Ajustes' }).first().click();
+  await expect(page.locator('.nav-btn.scanning')).toBeVisible();
+  releaseScan();
   const toast = page.locator('.toast', { hasText: 'concluída' });
   await expect(toast).toBeVisible({ timeout: 20_000 });
   await toast.getByRole('button', { name: 'Abrir' }).click();
@@ -233,8 +246,10 @@ test.describe('menu de contexto', () => {
 
     await page.locator('.crumbs button').first().click();
     await row('projeto').click({ button: 'right' });
+    holdScanOpen();
     await menuItem('Analisar somente esta pasta').click();
     await expect(page.locator('.scan .target')).toHaveText(path.join(fixture, 'projeto'));
+    releaseScan();
     await expect(page.locator('.crumbs button').first()).toHaveText(path.join(fixture, 'projeto'), { timeout: 20_000 });
   });
 });
@@ -399,6 +414,7 @@ test('limpeza demorada: mostra progresso, continua em segundo plano e avisa ao t
   await page.getByRole('button', { name: /Adicionar à limpeza/ }).click();
   await page.getByRole('button', { name: /^Limpeza/ }).click();
   await page.getByRole('button', { name: 'Mover para a Lixeira' }).click();
+  writeFileSync(holdTrash, '');
   await page
     .getByRole('dialog', { name: 'Confirmar limpeza' })
     .getByRole('button', { name: 'Mover para a Lixeira' })
@@ -416,6 +432,7 @@ test('limpeza demorada: mostra progresso, continua em segundo plano e avisa ao t
   await expect(page.locator('.statusbar')).toContainText('Limpando');
   await page.getByRole('button', { name: 'Explorar' }).click();
   await expect(page.locator('.crumbs')).toBeVisible();
+  rmSync(holdTrash, { force: true });
 
   const done = page.locator('.toast', { hasText: 'Limpeza concluída' });
   await expect(done).toBeVisible({ timeout: 20_000 });

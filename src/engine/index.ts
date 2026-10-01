@@ -36,7 +36,8 @@ if (selected.nativeError) console.warn(`[engine] motor ${selected.scanner.kind}:
 const baseScanner = selected.scanner;
 // Só em testes E2E: atrasa a varredura para exercitar fluxos com análise em andamento.
 const testDelay = Number(process.env.TIDYSPACE_TEST_SCAN_DELAY_MS ?? 0);
-const delayed = testDelay > 0 ? new DelayedScanner(baseScanner, testDelay) : baseScanner;
+const testHold = process.env.TIDYSPACE_TEST_SCAN_HOLD;
+const delayed = testDelay > 0 || testHold ? new DelayedScanner(baseScanner, testDelay, testHold) : baseScanner;
 // Só para os prints do README: pasta fictícia com arquivos esparsos e volume fictício.
 const demo = process.env.TIDYSPACE_DEMO === '1';
 const scanner = demo ? new DemoScanner(delayed) : delayed;
