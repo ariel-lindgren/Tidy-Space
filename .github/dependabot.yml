@@ -5,6 +5,13 @@ updates:
     schedule: { interval: weekly }
     groups:
       dev-tooling: { dependency-type: development }
+    ignore:
+      # electron-vite 5 só aceita Vite 5–7; @vitejs/plugin-react 6 exige Vite 8. Liberar quando o
+      # electron-vite suportar o Vite 8.
+      - dependency-name: vite
+        versions: ['>=8']
+      - dependency-name: '@vitejs/plugin-react'
+        versions: ['>=6']
   - package-ecosystem: cargo
     directory: /src/native
     schedule: { interval: weekly }

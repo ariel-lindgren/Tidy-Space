@@ -28,10 +28,10 @@ removal. Runs on **Windows, macOS and Linux**, in **English and Portuguese**.
 
 Prerequisites (for Development):
 
-|                                  | All | Windows                                                                            | macOS                    | Linux             |
-| -------------------------------- | --- | ---------------------------------------------------------------------------------- | ------------------------ | ----------------- |
-| Node.js ≥ 20.19 (22 recommended) | ✔   |                                                                                    |                          |                   |
-| Rust stable (`rustup`)           | ✔   | **MSVC** toolchain + Visual Studio Build Tools with “Desktop development with C++” | Xcode Command Line Tools | `build-essential` |
+|                              | All | Windows                                                                            | macOS                    | Linux             |
+| ---------------------------- | --- | ---------------------------------------------------------------------------------- | ------------------------ | ----------------- |
+| Node.js 22 (≥ 22.22.2) or 24 | ✔   |                                                                                    |                          |                   |
+| Rust stable (`rustup`)       | ✔   | **MSVC** toolchain + Visual Studio Build Tools with “Desktop development with C++” | Xcode Command Line Tools | `build-essential` |
 
 ```bash
 npm install
