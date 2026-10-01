@@ -1,0 +1,13 @@
+node_modules/
+out/
+release/
+coverage/
+test-results/
+playwright-report/
+*.log
+.DS_Store
+src/native/target/
+src/native/node/dist/
+
+# Protótipo de UI: só local, não é publicado
+docs/prototype/

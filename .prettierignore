@@ -1,0 +1,7 @@
+out
+release
+coverage
+docs/prototype
+src/native/target
+src/native/node/dist
+package-lock.json

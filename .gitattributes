@@ -1,0 +1,6 @@
+# Fins de linha LF no repositório e na cópia de trabalho, em qualquer SO.
+* text=auto eol=lf
+*.png binary
+*.ico binary
+*.icns binary
+*.node binary
