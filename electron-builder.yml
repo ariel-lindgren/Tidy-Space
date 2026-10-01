@@ -1,0 +1,37 @@
+# Empacotamento: `npm run package` (instalador do SO atual). O CI gera Windows e Linux (x64 e
+# arm64) e um .dmg universal do macOS.
+appId: br.com.wkm.tidyspace
+productName: TidySpace
+copyright: Copyright © 2026 Working Minds
+directories:
+  output: release/${version}
+files:
+  - out/**
+  - package.json
+# O módulo nativo fica fora do asar (arquivos .node precisam existir no disco).
+extraResources:
+  - from: src/native/node/dist
+    to: native
+    filter: ['*.node']
+npmRebuild: false
+win:
+  target: [nsis]
+  artifactName: ${productName}-${version}-win-${arch}.${ext}
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+mac:
+  target: [dmg]
+  category: public.app-category.utilities
+  artifactName: ${productName}-${version}-mac-${arch}.${ext}
+  hardenedRuntime: true
+  # Build universal: os dois .node (arm64 e x64) vão iguais nos dois apps; o loader escolhe pela
+  # arquitetura em execução. Arquivos Mach-O idênticos precisam ser declarados aqui.
+  x64ArchFiles: Contents/Resources/native/*.node
+  # Sem assinatura até existir certificado Apple Developer (ver README).
+  identity: null
+linux:
+  target: [AppImage, deb]
+  category: Utility
+  maintainer: Working Minds <ariel@wkm.com.br>
+  artifactName: ${productName}-${version}-linux-${arch}.${ext}

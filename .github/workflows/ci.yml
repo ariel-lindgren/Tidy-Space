@@ -1,0 +1,153 @@
+name: CI
+
+# Push na main e PRs: qualidade + build/E2E/instaladores em todas as plataformas.
+# Tag `v*` (ex.: v0.2.0): além disso, publica os instaladores numa GitHub Release.
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Qualidade (lint, tipos, testes)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src/native
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npm run test:coverage
+      - run: npm run lint:native
+      - run: npm run test:native
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: coverage
+          retention-days: 7
+
+  build:
+    name: Build ${{ matrix.name }}
+    needs: quality
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: windows-x64
+            os: windows-latest
+          - name: windows-arm64
+            os: windows-11-arm
+          - name: linux-x64
+            os: ubuntu-latest
+          - name: linux-arm64
+            os: ubuntu-24.04-arm
+          # Um único .dmg universal (Intel + Apple Silicon): o Rust é compilado para os dois
+          # alvos e o electron-builder junta os dois apps. O E2E roda na parte arm64 (o runner).
+          - name: macos-universal
+            os: macos-latest
+            rust-targets: aarch64-apple-darwin, x86_64-apple-darwin
+            pack-args: --mac --universal
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust-targets }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src/native
+          key: ${{ matrix.name }}
+      - name: Dependências do Linux (E2E headless e Lixeira via gio)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb libglib2.0-bin
+      - run: npm ci
+      - run: npm run test:native
+
+      - name: Módulo nativo
+        if: matrix.rust-targets == ''
+        run: npm run build:native
+      - name: Módulo nativo (arm64 + x64)
+        if: matrix.rust-targets != ''
+        run: |
+          npm run build:native -- --target aarch64-apple-darwin
+          npm run build:native -- --target x86_64-apple-darwin
+          ls -l src/native/node/dist
+
+      - run: npm run build
+      - name: Testes E2E
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then xvfb-run -a npx playwright test; else npx playwright test; fi
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-${{ matrix.name }}
+          path: test-results/**
+          retention-days: 7
+
+      - name: Empacotar
+        run: npx electron-builder ${{ matrix.pack-args }} --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tidyspace-${{ matrix.name }}
+          if-no-files-found: error
+          path: |
+            release/*/*.exe
+            release/*/*.dmg
+            release/*/*.AppImage
+            release/*/*.deb
+          retention-days: 14
+
+  release:
+    name: Publicar release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: A tag confere com a versão do package.json
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::tag $GITHUB_REF_NAME, mas package.json está em $version"
+            exit 1
+          fi
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: tidyspace-*
+          path: dist
+          merge-multiple: true
+      - run: find dist -type f | sort
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/**/*
+          generate_release_notes: true
+          # Versões como v0.3.0-beta.1 saem marcadas como pré-lançamento.
+          prerelease: ${{ contains(github.ref_name, '-') }}
