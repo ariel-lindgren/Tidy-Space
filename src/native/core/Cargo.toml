@@ -1,0 +1,25 @@
+[package]
+name = "scanner-core"
+description = "Varredura paralela de diretórios do TidySpace (sem dependência de Node)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+rayon = "1.12.0"
+sysinfo = { version = "0.39.6", default-features = false, features = ["disk"] }
+thiserror = "2.0.21"
+
+[dev-dependencies]
+tempfile = "3.27.0"
+
+[target."cfg(windows)".dependencies]
+windows-sys = { version = "0.61.2", features = [
+  "Wdk_Foundation",
+  "Wdk_Storage_FileSystem",
+  "Win32_Foundation",
+  "Win32_Security",
+  "Win32_Storage_FileSystem",
+  "Win32_System_IO",
+] }

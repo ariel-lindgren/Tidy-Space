@@ -1,0 +1,17 @@
+{
+  "name": "@tidyspace/scanner",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Binding N-API do scanner (gerado por `npm run build:native` na raiz).",
+  "napi": {
+    "binaryName": "scanner",
+    "targets": [
+      "x86_64-pc-windows-msvc",
+      "aarch64-pc-windows-msvc",
+      "x86_64-apple-darwin",
+      "aarch64-apple-darwin",
+      "x86_64-unknown-linux-gnu",
+      "aarch64-unknown-linux-gnu"
+    ]
+  }
+}
