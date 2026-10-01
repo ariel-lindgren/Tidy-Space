@@ -8,6 +8,7 @@ import {
   rmSync,
   statSync,
   symlinkSync,
+  unlinkSync,
   utimesSync,
   writeFileSync,
 } from 'node:fs';
@@ -129,16 +130,34 @@ test.beforeAll(async () => {
   }
   // Pasta onde o usuário atual não pode apagar nada (simula pasta protegida do sistema).
   write(fixture, 'protegido/segredo.bin', 600_000);
+  // Sentinela: se o processo de teste conseguir apagá-lo, o ambiente não simula a proteção.
+  write(fixture, 'protegido/sentinela.tmp', 10);
   if (process.platform === 'win32') lockFolder(path.join(fixture, 'protegido'), true);
   write(other, 'backup.zip', 2_000_000);
   await launch();
 });
 
 /** Nega (ou restaura) o direito de apagar dentro da pasta para o usuário atual (Windows). */
+/**
+ * Nega a exclusão na pasta e no conteúdo para Everyone (S-1-1-0), o que vale também para
+ * administradores. Erros do icacls aparecem (antes eram descartados e o teste seguia sem proteção).
+ */
 function lockFolder(dir: string, lock: boolean) {
-  const user = process.env.USERNAME ?? '';
-  const args = lock ? [dir, '/deny', `${user}:(OI)(CI)(DE,DC)`] : [dir, '/remove:d', user];
-  execFileSync('icacls', args, { stdio: 'ignore' });
+  const args = lock ? [dir, '/deny', '*S-1-1-0:(OI)(CI)(DE,DC)'] : [dir, '/remove:d', '*S-1-1-0'];
+  execFileSync('icacls', args, { stdio: 'pipe' });
+}
+
+/**
+ * A proteção só é simulável se o próprio processo de teste não conseguir apagar ali. Um
+ * administrador com privilégios elevados (ex.: runners do GitHub, sem UAC) pode contornar a regra.
+ */
+function protectionIsEffective(dir: string): boolean {
+  try {
+    unlinkSync(path.join(dir, 'sentinela.tmp'));
+    return false;
+  } catch {
+    return true;
+  }
 }
 
 test.afterAll(async () => {
@@ -379,6 +398,10 @@ test('revisão de sugestão: lista completa, marcar/desmarcar, filtro, coluna re
 
 test('pasta protegida: pula o item sem travar e explica o motivo', async () => {
   test.skip(process.platform !== 'win32', 'cenário de permissão montado com icacls (Windows)');
+  test.skip(
+    !protectionIsEffective(path.join(fixture, 'protegido')),
+    'o processo consegue apagar na pasta negada (administrador elevado): proteção não simulável aqui',
+  );
   await page.getByRole('button', { name: 'Maiores' }).click();
   await page.getByRole('table', { name: 'Maiores itens' }).getByText('segredo.bin').click();
   await page.getByRole('button', { name: /Adicionar à limpeza/ }).click();
