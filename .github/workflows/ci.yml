@@ -38,7 +38,7 @@ jobs:
       - run: npm run test:coverage
       - run: npm run lint:native
       - run: npm run test:native
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: coverage
@@ -101,7 +101,7 @@ jobs:
         shell: bash
         run: |
           if [ "$RUNNER_OS" = "Linux" ]; then xvfb-run -a npx playwright test; else npx playwright test; fi
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-${{ matrix.name }}
@@ -112,7 +112,7 @@ jobs:
         run: npx electron-builder ${{ matrix.pack-args }} --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: tidyspace-${{ matrix.name }}
           if-no-files-found: error
