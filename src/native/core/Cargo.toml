@@ -8,7 +8,7 @@ publish.workspace = true
 
 [dependencies]
 rayon = "1.12.0"
-sysinfo = { version = "0.39.6", default-features = false, features = ["disk"] }
+sysinfo = { version = "0.40.1", default-features = false, features = ["disk"] }
 thiserror = "2.0.21"
 
 [dev-dependencies]
